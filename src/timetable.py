@@ -1,40 +1,54 @@
+import time
+
 class Timetabler:
     """Responsible for generating the timetable
+    """
 
-    Aims to minimise the number of conflicts using a heuristic algorithm
-     - A priority system determines when conflicts are acceptable (e.g. meeting clashing with break time would be ok)
-
-    Priorities:
-     - 1: Very high priority (Music lessons, one-off events etc.)
-     - 2: High priority (Lessons)
-     - 3: Medium priority (Lunch slot, Meetings)
-     - 4: Low priority (Break times, Non-lunch lunch time)
-     - 5: No Priority (Entirely free time - no disruption at all)
-
-    Note that the teachers should already be allocated to classes [There may be a function provided to do this that
-    provides the optimal arrangement of teachers to minimise issues with the timetable]"""
-
-    def __init__(self, blocks: int, overtime_blocks: int):
+    def __init__(self, periods: int, overtime_periods: int):
         """
-
-        :param blocks: Number of blocks in a given day. A block is the smallest unit of time available (usually 5 mins)
-        :param overtime_blocks: In the event a solution is not possible within the usual blocks, how many extra blocks
-        are available to schedule activities in
-
-        Classes, availability and other constraints can be added through the relevant functions
+        :param periods: Number of periods in a given day. A period is the smallest unit of time available (usually 5 mins)
+        :param overtime_periods: In the event a solution is not possible within the usual periods, these extra periods
+        are available for scheduling
         """
-        pass
+        self.timetable = LiveTimetable()
+        self.classes = Classes()
+        self.unscheduled = Unscheduled()
 
-    def add_class(self, teacher, students):
-        """Adds a class to the scheduler
+    def update(self):
+        """Updates the timetable with all newly scheduled lessons"""
 
-        :param teacher: The ID of the teacher """
+    def loop(self, interval: float, stop_after:float = 0):
+        """Repeatedly calls .update() every interval seconds
+        Optional: stop after a given number of seconds
+        Blocking call"""
+        start = time.time()
+        while True:
+            self.update()
+            time.sleep(interval)
+            if stop_after and time.time() - start >= stop_after:
+                break
 
-    def add_teacher(self, name, working_hours, preferences):
-        """Adds a teacher
+    def setup(self):
+        """Allocates classes given students' subject choices"""
+        self.classes.allocate()
 
-        :param name:
-        :param working_hours:
-        :param preferences:
-        :return:
-        """
+
+class Classes:
+    """Represents allocated classes
+
+    Can be accessed to get the students in each class, or which classes conflict with each other"""
+
+    def allocate(self):
+        """Allocates or re-allocates students to classes given their choices"""
+
+
+class LiveTimetable:
+    """Stores the current timetable"""
+
+
+class Event:
+    """Represents an event in the timetable"""
+
+
+class Unscheduled:
+    """Stores all events that are yet to be scheduled"""
