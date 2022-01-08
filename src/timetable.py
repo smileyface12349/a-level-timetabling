@@ -1,3 +1,4 @@
+import random
 import time
 
 
@@ -86,10 +87,11 @@ class Classes:
         working_overflow_blocks = []
 
         subjects_not_considered = choices.by_subject
+        student_classes = {}  # subject: student: [classId]
 
-        self.allocate_rec(subjects_not_considered, working_main_blocks, working_overflow_blocks)
+        self.allocate_rec(subjects_not_considered, working_main_blocks, working_overflow_blocks, student_classes)
 
-    def allocate_rec(self, subjects_not_considered, working_main_blocks, working_overflow_blocks, best_possibility=None):
+    def allocate_rec(self, subjects_not_considered, working_main_blocks, working_overflow_blocks, student_classes, best_possibility=None):
         if not subjects_not_considered:
             return
 
@@ -101,12 +103,71 @@ class Classes:
             # TODO: consider allocating subject to that block, resolving conflicts in any way that seems appropriate
             p_working_main_blocks = working_main_blocks
             p_working_overflow_blocks = working_overflow_blocks
-            for cls in working_main_blocks['classes']:
-                pass
-            possibilities.append(self.allocate_rec(subjects_not_considered, p_working_main_blocks, p_working_overflow_blocks))
 
-        # TODO: get best possibility
+            # get conflicts between this subject and that block
+            conflicts = ['a', 'b']  # TODO
+            non_conflicts = ['c', 'd'] # TODO
+
+            # Isolate conflicts to minimum number of classes possible
+            if len(conflicts) < self.MAX_SIZE:  # all conflicts fit in one class
+                taken = {}  # todo
+                conflict_class_id = self.generate_class_id(taken)
+                #p_working_main_blocks[block]['classes'].append(class_id)
+                for student in conflicts:
+                    if subject not in student_classes:
+                        student_classes[subject] = {}
+                    if student not in student_classes[subject]:
+                        student_classes[subject][student] = []
+                    student_classes[subject][student] = [conflict_class_id]
+            # TODO: What if there are more than MAX_SIZE conflicts?
+            if len(non_conflicts) < self.MAX_SIZE:  # all conflicts fit in one class
+                taken = {}  # todo
+                non_conflict_class_id = self.generate_class_id(taken)
+                #p_working_main_blocks[block]['classes'].append(class_id)
+                for student in conflicts:
+                    if subject not in student_classes:
+                        student_classes[subject] = {}
+                    if student not in student_classes[subject]:
+                        student_classes[subject][student] = []
+                    student_classes[subject][student] = [non_conflict_class_id, conflict_class_id]
+            # TODO: What if there are more than MAX_SIZE non conflicts?
+
+            # CONSIDER: Put non-conflicts in this block and conflicts elsewhere
+            # Class of non conflicts should go in this block
+            p_working_main_blocks[block]['classes'].append(non_conflict_class_id)
+            # Class of conflicts should go in a different block - try all
+            for b in working_main_blocks:
+                if b == block:
+                    continue
+                p_working_main_blocks[b]['classes'].append(conflict_class_id)
+                # TODO: Need to properly consider conflicts with other blocks - should go back through recursion with it
+                possibilities.append(
+                    self.allocate_rec(subjects_not_considered, p_working_main_blocks, p_working_overflow_blocks,
+                                      student_classes, best_possibility=best_possibility))
+                p_working_main_blocks[b]['classes'].pop(-1)
+
+            # CONSIDER: Move all conflicts to an overflow block, and allocate non-conflicts here
+            # (but don't bother if greater than the overflow threshold)
+            if len(conflicts) <= self.OVERFLOW_THRESHOLD:
+                p_working_overflow_blocks.append({'classes': [conflict_class_id]})
+                possibilities.append(
+                    self.allocate_rec(subjects_not_considered, p_working_main_blocks, p_working_overflow_blocks,
+                                      student_classes, best_possibility=best_possibility))
+
+            # TODO: CONSIDER: Split up classes within the block instead
+
+            possibilities.append(self.allocate_rec(subjects_not_considered, p_working_main_blocks, p_working_overflow_blocks, student_classes, best_possibility=best_possibility))
+
+        # TODO: Determine which possibility is best
         return best_possibility
+
+    def generate_class_id(self, taken):
+        """Generates a unique ID that is not taken"""
+        while True:
+            potential_id = str(random.randint(1, 256)) # todo
+            if potential_id not in taken:
+                break
+        return potential_id
 
 
 class LiveTimetable:
