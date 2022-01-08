@@ -1,5 +1,6 @@
 import time
 
+
 class Timetabler:
     """Responsible for generating the timetable
     """
@@ -71,7 +72,7 @@ class Classes:
     Can be accessed to get the students in each class, or which classes conflict with each other"""
 
     MAX_SIZE = 24
-    MIN_SIZE = 4
+    OVERFLOW_THRESHOLD = 4  # threshold of conflicting students to attempt to allocate overflow blocks
     MAIN_BLOCKS = 4
 
     def __init__(self):
@@ -95,11 +96,13 @@ class Classes:
         possibilities = []
 
         # consider just the first subject - other subjects will be considered on future function calls
-        subject = dict(subjects_not_considered).pop(0) # here, dict() ensures the parameter is passed by value, not by reference
-        for block in self._main_blocks:
+        subject = dict(subjects_not_considered).pop(0)  # here, dict() ensures the parameter is passed by value, not by reference
+        for block in working_main_blocks:
             # TODO: consider allocating subject to that block, resolving conflicts in any way that seems appropriate
             p_working_main_blocks = working_main_blocks
             p_working_overflow_blocks = working_overflow_blocks
+            for cls in working_main_blocks['classes']:
+                pass
             possibilities.append(self.allocate_rec(subjects_not_considered, p_working_main_blocks, p_working_overflow_blocks))
 
         # TODO: get best possibility
