@@ -86,7 +86,7 @@ class Classes:
         working_main_blocks = [{'classes': [], 'conflicts': {}}]*self.MAIN_BLOCKS
         working_overflow_blocks = []
 
-        subjects_not_considered = choices.by_subject
+        subjects_not_considered = choices.by_subject # subjects: [student]
         student_classes = {}  # subject: student: [classId]
 
         self.allocate_rec(subjects_not_considered, working_main_blocks, working_overflow_blocks, student_classes)
@@ -100,19 +100,24 @@ class Classes:
         # consider just the first subject - other subjects will be considered on future function calls
         subject = dict(subjects_not_considered).pop(0)  # here, dict() ensures the parameter is passed by value, not by reference
         for block in working_main_blocks:
-            # TODO: consider allocating subject to that block, resolving conflicts in any way that seems appropriate
+            # Consider allocating subject to that block, resolving conflicts in any way that seems appropriate
             p_working_main_blocks = working_main_blocks
             p_working_overflow_blocks = working_overflow_blocks
 
             # get conflicts between this subject and that block
-            conflicts = ['a', 'b']  # TODO
-            non_conflicts = ['c', 'd'] # TODO
+            conflicts = []
+            non_conflicts = []
+            for subject_in_block in block:
+                if subject_in_block == subject:
+                    for student_in_subject_in_block in student_classes[subject_in_block]:
+                        conflicts.append(student_in_subject_in_block)
+                else:
+                    for student_in_subject_in_block in student_classes[subject_in_block]:
+                        non_conflicts.append(student_in_subject_in_block)
 
             # Isolate conflicts to minimum number of classes possible
             if len(conflicts) < self.MAX_SIZE:  # all conflicts fit in one class
-                taken = {}  # todo
-                conflict_class_id = self.generate_class_id(taken)
-                #p_working_main_blocks[block]['classes'].append(class_id)
+                conflict_class_id = self.generate_class_id(student_classes=student_classes)
                 for student in conflicts:
                     if subject not in student_classes:
                         student_classes[subject] = {}
@@ -123,7 +128,6 @@ class Classes:
             if len(non_conflicts) < self.MAX_SIZE:  # all conflicts fit in one class
                 taken = {}  # todo
                 non_conflict_class_id = self.generate_class_id(taken)
-                #p_working_main_blocks[block]['classes'].append(class_id)
                 for student in conflicts:
                     if subject not in student_classes:
                         student_classes[subject] = {}
@@ -159,12 +163,28 @@ class Classes:
             possibilities.append(self.allocate_rec(subjects_not_considered, p_working_main_blocks, p_working_overflow_blocks, student_classes, best_possibility=best_possibility))
 
         # TODO: Determine which possibility is best
+        best_possibility = random.choice(possibilities)
+
         return best_possibility
 
-    def generate_class_id(self, taken):
-        """Generates a unique ID that is not taken"""
+    def generate_class_id(self, student_classes=None, taken=None):
+        """Generates a unique ID that is not taken
+
+        EITHER student_classes OR taken can be provided (if both are provided, taken takes priority)
+         - if neither are provided, there is a 1 in 2^32 chance of a collision
+
+        :param student_classes: Current class allocations, of form {subject: {student: [class_id]}}
+        :param taken: List of class IDs already used"""
+
+        if not taken:
+            taken = []  # list of all class ids that have been used
+            if student_classes:
+                for x in student_classes.keys():
+                    for y in student_classes[x].keys():
+                        taken.append(student_classes[x][y])
+
         while True:
-            potential_id = str(random.randint(1, 256)) # todo
+            potential_id = str(random.randint(1, 2**32))
             if potential_id not in taken:
                 break
         return potential_id
