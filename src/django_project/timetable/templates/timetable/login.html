@@ -1,3 +1,13 @@
 {% extends "timetable/base.html" %}
 {% block content %}
+    <h1>Login as {{user}}</h1>
+    <form>
+        <label>
+            <input placeholder="username">
+        </label>
+        <label>
+            <input type="password" placeholder="password">
+        </label>
+        <input type="submit">
+    </form>
 {% endblock %}
