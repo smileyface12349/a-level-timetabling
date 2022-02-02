@@ -23,14 +23,16 @@ class StudentSubjects(models.Model):
     )
     group = models.ForeignKey(
         'Groups',
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
+        null=True
     )
 
 
 class Groups(models.Model):
     teacher = models.ForeignKey(
         'Teachers',
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
+        null=True
     )
 
 

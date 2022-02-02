@@ -3,32 +3,28 @@ from django.http import HttpResponse
 
 
 def home(request):
-    return HttpResponse("Here will be a basic homepage giving links to the other sites")
+    return render(request, 'timetable/home.html')
 
 
 def student_login(request):
-    return HttpResponse("This will process student logins")
+    return render(request, 'timetable/login.html', {'user': 'Student'})
 
 
 def student_timetable(request):
-    return HttpResponse("This will display student timetables")
+    return render(request, 'timetable/timetable_view/timetable.html')
 
 
 def teacher_login(request):
-    return HttpResponse("This will process teacher logins")
+    return render(request, 'timetable/login.html', {'user': 'Teacher'})
 
 
 def teacher_timetable(request):
-    return HttpResponse("This will display teacher timetables")
+    return render(request, 'timetable/timetable_view/timetable.html')
 
 
 def teacher_scheduler(request):
-    return HttpResponse("This will allow teachers to schedule lessons")
+    return render(request, 'timetable/scheduling/schedule.html')
 
 
-def admin_login(request):
-    return HttpResponse("This will process admin logins")
-
-
-def admin_timetable(request):
-    return HttpResponse("This will display the overall timetable")
+def teacher_scheduled(request):
+    return render(request, 'timetable/scheduling/scheduled_list.html')

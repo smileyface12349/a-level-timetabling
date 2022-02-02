@@ -1,8 +1,18 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 
 <head>
-    <title>Timetabling</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height">
+    <meta name="keywords" content="timetabling, timetable, scheduler">
+    <meta name="author" content="Joshua Humphriss">
+
+    <title>
+        {% if title %}{{title}} - {% endif %}Timetabling
+    </title>
+
+    <link rel="stylesheet" type="text/css" href="{% static 'timetable/style.css' %}">
 </head>
 
 <body>

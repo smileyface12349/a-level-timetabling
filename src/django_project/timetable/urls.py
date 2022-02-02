@@ -9,8 +9,6 @@ urlpatterns = [
 
     path('teacher/login/', views.teacher_login, name='timetable-teacher-login'),
     path('teacher/', views.teacher_timetable, name='timetable-teacher'),
+    path('teacher/scheduled', views.teacher_scheduled, name='timetable-teacher-scheduled'),
     path('teacher/schedule', views.teacher_scheduler, name='timetable-teacher-schedule'),
-
-    path('admin/login/', views.admin_login, name='timetable-admin-login'),
-    path('admin/', views.admin_timetable, name='timetable-admin'),
 ]
