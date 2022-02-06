@@ -1,13 +1,17 @@
 {% extends "timetable/base.html" %}
 {% block content %}
-    <h1>Login as {{user}}</h1>
-    <form>
-        <label>
-            <input placeholder="username">
-        </label>
-        <label>
-            <input type="password" placeholder="password">
-        </label>
-        <input type="submit">
-    </form>
+    <div class="text-center login-width m-auto">
+        <h1 class="my-4">Login as {{user_type|title}}</h1>
+        <form class="text-left">
+            <label class="w-100">
+                <input class="w-100" placeholder="Username">
+            </label>
+            <label class="w-100">
+                <input class="w-100" type="password" placeholder="Password">
+            </label>
+            <a href="/{{user_opposite}}/login">Switch to {{user_opposite}} login</a><br>
+            <input type="submit" class="btn btn-success mt-2" value="Login">
+            <a href="/" class="text-danger">Back to home</a>
+        </form>
+    </div>
 {% endblock %}

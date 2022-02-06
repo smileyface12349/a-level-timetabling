@@ -1,10 +1,11 @@
 {% extends "timetable/base.html" %}
 {% block content %}
-    <h1>Timetabling</h1>
-    <p>Welcome to the timetabling website</p>
-    <p>Are you a:</p>
-    <ul>
-        <li><a href="/student">Student</a></li>
-        <li><a href="/teacher">Teacher</a></li>
-    </ul>
+    <div class="container">
+        <h1 class="text-center mt-4">Timetabling</h1>
+        <p class="text-center mt-3 mb-4">Choose one of the options to proceed to the appropriate interface</p>
+        <div class="text-center">
+            <a href="/student" class="w-100"><button class="btn btn-primary">Student</button></a>
+            <a href="/teacher"><button class="btn btn-primary">Teacher</button></a>
+        </div>
+    </div>
 {% endblock %}

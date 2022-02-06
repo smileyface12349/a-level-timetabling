@@ -7,19 +7,23 @@ def home(request):
 
 
 def student_login(request):
-    return render(request, 'timetable/login.html', {'user': 'Student'})
+    return render(request, 'timetable/login.html', {'user_type': 'student', 'user_opposite': 'teacher'})
 
 
 def student_timetable(request):
-    return render(request, 'timetable/timetable_view/timetable.html')
+    return render(request, 'timetable/timetable.html')
 
 
 def teacher_login(request):
-    return render(request, 'timetable/login.html', {'user': 'Teacher'})
+    return render(request, 'timetable/login.html', {'user_type': 'teacher', 'user_opposite': 'student'})
+
+
+def teacher(request):
+    return render(request, 'timetable/teacher.html')
 
 
 def teacher_timetable(request):
-    return render(request, 'timetable/timetable_view/timetable.html')
+    return render(request, 'timetable/timetable.html')
 
 
 def teacher_scheduler(request):

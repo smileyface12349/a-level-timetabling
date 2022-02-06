@@ -1,0 +1,40 @@
+.login-width {
+    width: 350px;
+}
+
+.scheduled {
+    background-color: #c6c6c9 !important;
+    color: #3b3b3b !important;
+}
+
+#duration-input-number {
+    width: 66px;
+}
+
+.subject-1 {
+    background-color: #ffa861 !important;
+}
+.subject-8 {
+    background-color: #ffabac !important;
+}
+.subject-2 {
+    background-color: #f6ff77 !important;
+}
+.subject-5 {
+    background-color: #a4ff77 !important;
+}
+.subject-3 {
+    background-color: #8bffc9 !important;
+}
+.subject-6 {
+    background-color: #87eefc !important;
+}
+.subject-4 {
+    background-color: #81aeff !important;
+}
+.subject-7 {
+    background-color: #b49afa !important;
+}
+.subject-9 {
+    background-color: #ffa7f7 !important;
+}

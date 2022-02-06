@@ -1,20 +1,28 @@
 {% extends "timetable/base.html" %}
 {% block content %}
-    <h1>Scheduled Lessons</h1>
-    <div>
-        <p>Specific Heat Capacity</p>
-        <p>50 minutes</p>
+    <h1 class="m-4">Scheduled Lessons</h1>
+    <div class="card scheduled my-2 mx-4">
+        <div class="card-body">
+            <p class="float-left mb-0">Specific Heat Capacity</p>
+            <p class="float-right mb-0">50 minutes</p>
+        </div>
     </div>
-    <div>
-        <p>s.h.c. practical</p>
-        <p>140 minutes</p>
+    <div class="card my-2 mx-4 bg-light">
+        <div class="card-body">
+            <p class="float-left mb-0">s.h.c practical</p>
+            <p class="float-right mb-0">140 minutes</p>
+        </div>
     </div>
-    <div>
-        <p>[untitled]</p>
-        <p>65 minutes</p>
+    <div class="card my-2 mx-4 bg-light">
+        <div class="card-body">
+            <p class="float-left mb-0">[untitled]</p>
+            <p class="float-right mb-0">65 minutes</p>
+        </div>
     </div>
-    <div>
-        <p>WARNING: Not enough lessons scheduled</p>
-        <p>55-minute lessons will be auto-generated</p>
+    <div class="card my-2 mx-4 bg-warning">
+        <h5 class="mx-2 mt-2">Not enough lessons scheduled</h5>
+        <p class="mx-2">Please ensure you always have enough lessons scheduled in advance. If you do not schedule enough lessons, 55-minute lessons will be automatically generated.</p>
     </div>
+    <a href="/teacher/schedule"><button class="btn btn-info ml-4 mt-2">New Lesson</button></a>
+    <a href="/" class="text-danger">Back to home</a>
 {% endblock %}

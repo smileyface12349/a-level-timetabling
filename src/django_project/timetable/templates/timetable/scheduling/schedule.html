@@ -1,17 +1,20 @@
 {% extends "timetable/base.html" %}
 {% block content %}
-    <h1>Schedule a Lesson</h1>
-    <form>
-        <label>
-            <input placeholder="Topic (optional)">
-        </label>
-        <label>Duration (minutes)
-            <button>55</button>
-            <button>85</button>
-            <button>115</button>
-            <button>135</button>
-            <input type="number">
-        </label>
-        <input type="submit">
-    </form>
+    <div class="text-center login-width m-auto">
+        <h1 class="my-4">Schedule a Lesson</h1>
+        <form class="text-left">
+            <label class="w-100">
+                <input class="w-100" placeholder="Topic (optional)">
+            </label>
+            <label class="w-100" for="duration-input-number">Duration (minutes)
+                <button class="btn-secondary btn px-1 py-0">40</button>
+                <button class="btn-secondary btn px-1 py-0">80</button>
+                <button class="btn-secondary btn px-1 py-0">100</button>
+                <button class="btn-secondary btn px-1 py-0">120</button>
+                <input id="duration-input-number" type="number" step="5" value="60">
+            </label>
+            <input type="submit" value="Submit" class="btn btn-success">
+            <a href="/teacher/scheduled" class="text-danger">Cancel</a>
+        </form>
+    </div>
 {% endblock %}
