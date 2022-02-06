@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+import json
+
+with open('credentials.json') as credentials_bytes:
+    credentials_text = credentials_bytes.read()
+    credentials = json.loads(credentials_text)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,12 +25,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '@7u(=c2*6!t6t&-qlj*5&4+k^odj8lq7o4y%s9*(y!k*p*dmai'
+SECRET_KEY = credentials['django_secret']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+from django.core.management.utils import get_random_secret_key
+get_random_secret_key()
 
 
 # Application definition

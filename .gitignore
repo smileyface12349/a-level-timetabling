@@ -1,5 +1,6 @@
 # Project stuff
 credentials.json
+src/django_project/credentials.json
 
 # PyCharm
 .idea
