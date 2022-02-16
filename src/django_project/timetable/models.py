@@ -1,52 +1,43 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+from django_project import settings
 
 
-class Students(models.Model):
-    first_name = models.CharField(max_length=16)
-    last_name = models.CharField(max_length=16)
-    username = models.CharField(max_length=32)
-    password_hash = models.CharField(max_length=32)
+class User(AbstractUser):
+    title = models.CharField(max_length=8)
 
 
-class Subjects(models.Model):
+class Subject(models.Model):
     name = models.CharField(max_length=16)
 
 
-class StudentSubjects(models.Model):
+class StudentSubject(models.Model):
     student = models.ForeignKey(
-        'Students',
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
     )
     subject = models.ForeignKey(
-        'Subjects',
+        'Subject',
         on_delete=models.CASCADE
     )
     group = models.ForeignKey(
-        'Groups',
+        'Group',
         on_delete=models.SET_NULL,
         null=True
     )
 
 
-class Groups(models.Model):
+class Group(models.Model):
     teacher = models.ForeignKey(
-        'Teachers',
+        'User',
         on_delete=models.SET_NULL,
         null=True
     )
 
 
-class Teachers(models.Model):
-    first_name = models.CharField(max_length=16)
-    last_name = models.CharField(max_length=16)
-    title = models.CharField(max_length=8)
-    username = models.CharField(max_length=32)
-    password_hash = models.CharField(max_length=32)
-
-
-class Lessons(models.Model):
+class Lesson(models.Model):
     group = models.ForeignKey(
-        'Groups',
+        'Group',
         on_delete=models.CASCADE
     )
     duration = models.DurationField()

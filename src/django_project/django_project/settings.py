@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import json
 
-with open('credentials.json') as credentials_bytes:
+with open('django_project/credentials.json') as credentials_bytes:
     credentials_text = credentials_bytes.read()
     credentials = json.loads(credentials_text)
 
@@ -108,6 +108,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = 'timetable.User'
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
@@ -127,6 +129,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATICFILES_DIRS = (
-    '/django_project/timetable/static/',
+    'timetable/static/',
 )
 STATIC_URL = '/static/'
