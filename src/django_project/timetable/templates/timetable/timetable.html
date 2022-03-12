@@ -66,4 +66,8 @@
             </div>
         </div>
     </div>
+    {% if user.user_type == 'teacher' %}
+        <a class="text-danger ml-2" href="/">Back to Home</a><br>
+    {% endif %}
+    <a class="text-danger ml-2" href="/logout">Logout</a>
 {% endblock %}

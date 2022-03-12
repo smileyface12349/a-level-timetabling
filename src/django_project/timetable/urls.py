@@ -1,15 +1,19 @@
 from django.urls import path
+from django.contrib.auth import views as django_views
 from . import views
+from .forms import LoginForm
 
 urlpatterns = [
-    path('', views.home, name='timetable-home'),
+    path('login/', django_views.LoginView.as_view(template_name='timetable/login.html', authentication_form=LoginForm),
+         name='timetable-login'),
+    path('logout/', django_views.LogoutView.as_view(template_name='timetable/logout.html'), name='timetable-logout'),
 
-    path('student/login/', views.student_login, name='timetable-student-login'),
+    path('', views.login_redirect, name='timetable-login-redirect'),
+
     path('student/', views.student_timetable, name='timetable-student'),
     path('student/timetable', views.student_timetable, name='timetable-student'),
 
     path('teacher/', views.teacher, name='timetable-teacher'),
-    path('teacher/login/', views.teacher_login, name='timetable-teacher-login'),
     path('teacher/timetable', views.teacher_timetable, name='timetable-teacher'),
     path('teacher/scheduled', views.teacher_scheduled, name='timetable-teacher-scheduled'),
     path('teacher/schedule', views.teacher_scheduler, name='timetable-teacher-schedule'),

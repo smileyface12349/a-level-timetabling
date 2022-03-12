@@ -1,17 +1,11 @@
 {% extends "timetable/base.html" %}
 {% block content %}
     <div class="text-center login-width m-auto">
-        <h1 class="my-4">Login as {{user_type|title}}</h1>
-        <form class="text-left">
-            <label class="w-100">
-                <input class="w-100" placeholder="Username">
-            </label>
-            <label class="w-100">
-                <input class="w-100" type="password" placeholder="Password">
-            </label>
-            <a href="/{{user_opposite}}/login">Switch to {{user_opposite}} login</a><br>
+        <h1 class="my-4">Log in</h1>
+        <form method="POST" class="text-left">
+            {% csrf_token %}
+            {{form}}
             <input type="submit" class="btn btn-success mt-2" value="Login">
-            <a href="/" class="text-danger">Back to home</a>
         </form>
     </div>
 {% endblock %}

@@ -1,10 +1,15 @@
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django_project import settings
+from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
-    title = models.CharField(max_length=8)
+    title = models.CharField(max_length=8, default='')
+    first_name = models.CharField(max_length=16)
+    last_name = models.CharField(max_length=16)
+    user_type = models.CharField(max_length=8, default='admin')
 
 
 class Subject(models.Model):
