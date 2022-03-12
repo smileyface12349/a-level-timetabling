@@ -14,30 +14,26 @@ class User(AbstractUser):
 
 class Subject(models.Model):
     name = models.CharField(max_length=16)
+    abbreviation = models.CharField(max_length=4)
 
 
-class StudentSubject(models.Model):
-    student = models.ForeignKey(
+class Link(models.Model):
+    user_id = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
     )
-    subject = models.ForeignKey(
+    subject_id = models.ForeignKey(
         'Subject',
         on_delete=models.CASCADE
     )
-    group = models.ForeignKey(
+    group_id = models.ForeignKey(
         'Group',
-        on_delete=models.SET_NULL,
-        null=True
+        on_delete=models.CASCADE
     )
 
 
 class Group(models.Model):
-    teacher = models.ForeignKey(
-        'User',
-        on_delete=models.SET_NULL,
-        null=True
-    )
+    name = models.CharField(max_length=8)
 
 
 class Lesson(models.Model):
@@ -47,4 +43,4 @@ class Lesson(models.Model):
     )
     duration = models.DurationField()
     topic = models.CharField(max_length=128)
-    scheduled_datetime = models.DateTimeField()
+    start = models.DateTimeField()

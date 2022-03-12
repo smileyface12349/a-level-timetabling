@@ -2,15 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import render, redirect
 
-
-# def home(request):
-#     return render(request, 'timetable/home.html')
-
-# def student_login(request):
-#     return render(request, 'timetable/login.html', {'user_type': 'student', 'user_opposite': 'teacher'})
-
-# def teacher_login(request):
-#     return render(request, 'timetable/login.html', {'user_type': 'teacher', 'user_opposite': 'student'})
+from .models import Lesson, Link, Subject, User, Group
 
 
 def login_redirect(request):
@@ -26,33 +18,39 @@ def login_redirect(request):
         else:
             return redirect('/admin/')
 
-    # headers = request.META
-    # if 'REMOTE_HOST' in headers:
-    #     user = headers['REMOTE_HOST']
-    #     print(user)
-    #     if user.user_type == 'student':
-    #         return redirect('/student/')
-    #     elif user.user_type == 'teacher':
-    #         return redirect('/teacher/')
-    #     else:
-    #         return redirect('/admin/')
-    # else:
-    #     return redirect('/login/')
-
 
 @login_required
-def student_timetable(request):
-    return render(request, 'timetable/timetable.html')
+def timetable(request):
+    user = request.user
+    lessons = []
+    for lesson in Lesson.objects.filter(group_id__link__user_id__username__exact=user.username):
+        lesson_data = []
+        if user.user_type == 'student':
+            lesson_data.append(Subject.objects.filter(link__group_id__lesson__id__exact=lesson.id)[:1].get().name)
+            teacher = User.objects.filter(link__group_id__lesson__id__exact=lesson.id, user_type='teacher')[:1].get()
+            if teacher.title:
+                lesson_data.append(teacher.title.title() + ' ' + teacher.last_name.title())
+            else:
+                lesson_data.append(teacher.first_name.title() + ' ' + teacher.last_name.title())
+        else:
+            lesson_data.append(Group.objects.filter(lesson__id__exact=lesson.id)[:1].get().name)
+            topic = lesson.topic
+            if len(topic) > 32:
+                topic = topic[:29]+'...'
+            lesson_data.append(topic)
+        lesson_data.append('Room')  # Room allocation will be completed later
+        start = lesson.start
+        end = lesson.start + lesson.duration
+        lesson_data.append(start.strftime('%H:%M') + ' - ' + end.strftime('%H:%M'))
+        lessons.append(lesson_data)
+    print(lessons)
+    return render(request, 'timetable/timetable.html', context={'lessons': lessons})
+
 
 
 @login_required
 def teacher(request):
     return render(request, 'timetable/teacher.html')
-
-
-@login_required
-def teacher_timetable(request):
-    return render(request, 'timetable/timetable.html')
 
 
 @login_required

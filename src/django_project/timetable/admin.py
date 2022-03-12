@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.utils.translation import gettext, gettext_lazy as _
 
-from .models import User
+from .models import User, Lesson, Group, Link, Subject
 
 # Register your models here.
 
@@ -65,3 +65,7 @@ class CustomUserAdmin(UserAdmin):
 
 
 admin.site.register(User, CustomUserAdmin)
+admin.site.register(Lesson)
+admin.site.register(Group)
+admin.site.register(Link)
+admin.site.register(Subject)

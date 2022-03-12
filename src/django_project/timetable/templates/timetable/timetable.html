@@ -25,46 +25,17 @@
     </ul>
 
     <div>
-        <div class="timetabled-lesson subject-1 card">
+        {% for lesson in lessons %}
+        <div class="timetabled-lesson subject-{{forloop.counter}} card">
             <div class="card-body">
-                <h5 class="card-title">Computer Science</h5>
-                <p class="card-text mb-1">Mr Grapefruit</p>
-                <p class="card-text mb-1">IT1</p>
-                <p class="card-text">09:00 - 10:55</p>
+                <h5 class="card-title">{{lesson.0}}</h5>
+                <p class="card-text mb-1">{{lesson.1}}</p>
+                <p class="card-text mb-1">{{lesson.2}}</p>
+                <p class="card-text">{{lesson.3}}</p>
             </div>
         </div>
-        <div class="timetabled-lesson subject-2 card">
-            <div class="card-body">
-                <h5 class="card-title">Physics</h5>
-                <p class="card-text mb-1">Mr Gherkin</p>
-                <p class="card-text mb-1">L4</p>
-                <p class="card-text">11:20 - 12:15</p>
-            </div>
-        </div>
-        <div class="timetabled-lesson subject-2 card">
-            <div class="card-body">
-                <h5 class="card-title">Physics</h5>
-                <p class="card-text mb-1">Miss Coriander</p>
-                <p class="card-text mb-1">L4</p>
-                <p class="card-text">12:20 - 13:15</p>
-            </div>
-        </div>
-        <div class="timetabled-lesson subject-3 card">
-            <div class="card-body">
-                <h5 class="card-title">Further Maths</h5>
-                <p class="card-text mb-1">Mr Beetroot</p>
-                <p class="card-text mb-1">R20</p>
-                <p class="card-text">14:30 - 15:25</p>
-            </div>
-        </div>
-        <div class="timetabled-lesson subject-4 card">
-            <div class="card-body">
-                <h5 class="card-title">Chess Club</h5>
-                <p class="card-text mb-1">Mr Watermelon-Tomato</p>
-                <p class="card-text mb-1">R4</p>
-                <p class="card-text">16:45 - 17:45</p>
-            </div>
-        </div>
+        {% endfor %}
+
     </div>
     {% if user.user_type == 'teacher' %}
         <a class="text-danger ml-2" href="/">Back to Home</a><br>
