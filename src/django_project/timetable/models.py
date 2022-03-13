@@ -43,4 +43,5 @@ class Lesson(models.Model):
     )
     duration = models.DurationField()
     topic = models.CharField(max_length=128)
-    start = models.DateTimeField()
+    start = models.DateTimeField(null=True)
+    fixed = models.BooleanField()
