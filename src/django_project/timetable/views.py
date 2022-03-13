@@ -1,3 +1,6 @@
+import datetime
+import math
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import render, redirect
@@ -22,8 +25,36 @@ def login_redirect(request):
 @login_required
 def timetable(request):
     user = request.user
+    day = request.GET.get('day')
+
+    if day and day.isdigit():  # user could have modified it to not be an int
+        day = int(day)
+        current_date = datetime.datetime.utcfromtimestamp(int(day))
+    else:
+        current_date = datetime.datetime.utcnow()
+    weekday: int = current_date.weekday()
+    if weekday >= 5:
+        current_date = current_date + datetime.timedelta(days=7-weekday)
+        weekday = 0
+    weekstart = current_date - datetime.timedelta(days=weekday)
+    after = current_date.replace(hour=0, minute=0, second=0)
+    before = current_date.replace(hour=23, minute=59, second=59)
+
+    weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+    weekdays_links = {'<': math.floor((weekstart - datetime.timedelta(days=3)).timestamp())}
+    for i in range(5):
+        d = weekstart + datetime.timedelta(days=i)
+        if i == weekday:
+            key = weekdays[i]+' '+str(d.day)
+            weekday_format = key
+        else:
+            key = weekdays[i]
+        weekdays_links[key] = math.floor(d.timestamp())
+    weekdays_links['>'] = math.floor((weekstart + datetime.timedelta(days=7)).timestamp())
+
     lessons = []
-    for lesson in Lesson.objects.filter(group_id__link__user_id__username__exact=user.username):
+
+    for lesson in Lesson.objects.filter(group_id__link__user_id__username__exact=user.username, start__gte=after, start__lte=before):
         lesson_data = []
         if user.user_type == 'student':
             lesson_data.append(Subject.objects.filter(link__group_id__lesson__id__exact=lesson.id)[:1].get().name)
@@ -35,16 +66,16 @@ def timetable(request):
         else:
             lesson_data.append(Group.objects.filter(lesson__id__exact=lesson.id)[:1].get().name)
             topic = lesson.topic
-            if len(topic) > 32:
-                topic = topic[:29]+'...'
+            if len(topic) > 44:
+                topic = topic[:42]+'...'
             lesson_data.append(topic)
         lesson_data.append('Room')  # Room allocation will be completed later
         start = lesson.start
         end = lesson.start + lesson.duration
         lesson_data.append(start.strftime('%H:%M') + ' - ' + end.strftime('%H:%M'))
         lessons.append(lesson_data)
-    print(lessons)
-    return render(request, 'timetable/timetable.html', context={'lessons': lessons})
+
+    return render(request, 'timetable/timetable.html', context={'lessons': lessons, 'weekday_format': weekday_format, 'weekdays_links': weekdays_links})
 
 
 
