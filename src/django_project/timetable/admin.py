@@ -17,6 +17,9 @@ TITLE_CHOICES = [('', "It doesn't matter"),
                  ('dr', 'Dr')]
 USER_TYPES = [('student', 'Student'),
               ('teacher', 'Teacher')]
+YEAR_CHOICES = [(None, 'N/A'),
+                ('L6', 'L6'),
+                ('U6', 'U6')]
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -25,10 +28,11 @@ class CustomUserCreationForm(UserCreationForm):
     last_name = forms.CharField()
     user_type = forms.ChoiceField(choices=USER_TYPES)
     email = forms.EmailField()
+    year_group = forms.ChoiceField(choices=YEAR_CHOICES, required=False)
 
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'password1', 'password2', 'user_type',)
+        fields = ('username', 'email', 'first_name', 'last_name', 'password1', 'password2', 'user_type', 'year_group')
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -37,10 +41,11 @@ class CustomUserChangeForm(UserChangeForm):
     last_name = forms.CharField()
     user_type = forms.ChoiceField(choices=USER_TYPES)
     email = forms.EmailField()
+    year_group = forms.ChoiceField(choices=YEAR_CHOICES, required=False)
 
     class Meta(UserChangeForm.Meta):
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'password')
+        fields = ('username', 'email', 'first_name', 'last_name', 'password', 'year_group')
 
 
 class CustomUserAdmin(UserAdmin):
@@ -55,7 +60,7 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = (
         (_('Authentication'), {'fields': ('username', 'email', 'password')}),
         (_('Details'), {
-            'fields': ('first_name', 'last_name', 'title', 'user_type'),
+            'fields': ('first_name', 'last_name', 'title', 'user_type', 'year_group'),
         }),
         (_('Permissions'), {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),

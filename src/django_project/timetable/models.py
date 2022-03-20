@@ -10,6 +10,7 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=16)
     last_name = models.CharField(max_length=16)
     user_type = models.CharField(max_length=8, default='admin')
+    year_group = models.CharField(max_length=4, null=True, default=None)
 
 
 class Subject(models.Model):
@@ -42,6 +43,6 @@ class Lesson(models.Model):
         on_delete=models.CASCADE
     )
     duration = models.DurationField()
-    topic = models.CharField(max_length=128)
-    start = models.DateTimeField(null=True)
-    fixed = models.BooleanField()
+    topic = models.CharField(max_length=128, default='', null=True)
+    start = models.DateTimeField(null=True, default=None)
+    fixed = models.BooleanField(default=False)

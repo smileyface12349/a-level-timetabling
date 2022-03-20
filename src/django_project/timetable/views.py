@@ -3,8 +3,11 @@ import math
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
+from django.core.exceptions import ValidationError
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 
+from .forms import ScheduleForm
 from .models import Lesson, Link, Subject, User, Group
 
 
@@ -78,7 +81,6 @@ def timetable(request):
     return render(request, 'timetable/timetable.html', context={'lessons': lessons, 'weekday_format': weekday_format, 'weekdays_links': weekdays_links})
 
 
-
 @login_required
 def teacher(request):
     return render(request, 'timetable/teacher.html')
@@ -86,7 +88,17 @@ def teacher(request):
 
 @login_required
 def teacher_scheduler(request):
-    return render(request, 'timetable/scheduling/schedule.html')
+    if request.method == 'POST':
+        form = ScheduleForm(request.POST, request=request)
+        if form.is_valid():
+            Lesson.objects.create(duration=form.cleaned_data['duration'], topic=form.cleaned_data['topic'],
+                                  group=form.cleaned_data['group'])
+            return redirect('/teacher/scheduled')
+
+    else:
+        form = ScheduleForm(request=request, label_suffix='')
+
+    return render(request, 'timetable/scheduling/schedule.html', {'form': form})
 
 
 @login_required
