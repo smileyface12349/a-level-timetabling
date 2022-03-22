@@ -1,5 +1,6 @@
 import datetime
 import math
+import time
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
@@ -10,6 +11,7 @@ from django.shortcuts import render, redirect
 from .forms import ScheduleForm
 from .models import Lesson, Link, Subject, User, Group
 
+MIN_UNSCHEDULED_LESSONS = 3
 
 def login_redirect(request):
     # redirect appropriately depending on user type
@@ -103,4 +105,23 @@ def teacher_scheduler(request):
 
 @login_required
 def teacher_scheduled(request):
-    return render(request, 'timetable/scheduling/scheduled_list.html')
+    user = request.user
+
+    lessons = []
+    unscheduled = 0
+    for lesson in Lesson.objects.filter(group_id__link__user_id__username__exact=user.username, start_gte=time.time()):
+
+        hours = math.floor(lesson.duration / 3600)
+        minutes = math.floor((lesson.duration - hours) / 60)
+
+        if lesson.topic:
+            topic = lesson.topic
+        else:
+            topic = '[untitled]' # this makes more sense than an empty string
+
+        if not lesson.fixed:
+            unscheduled += 1
+
+        lessons.append({'topic': topic, 'duration': str(hours)+'h '+str(minutes)+'m', 'fixed': lesson.fixed})
+
+    return render(request, 'timetable/scheduling/scheduled_list.html', {'lessons': lessons, 'enough': unscheduled >= MIN_UNSCHEDULED_LESSONS})
