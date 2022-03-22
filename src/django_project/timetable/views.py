@@ -109,15 +109,15 @@ def teacher_scheduled(request):
 
     lessons = []
     unscheduled = 0
-    for lesson in Lesson.objects.filter(group_id__link__user_id__username__exact=user.username, start_gte=time.time()):
+    for lesson in Lesson.objects.filter(group_id__link__user_id__username__exact=user.username).exclude(start__lte=datetime.datetime.now()).order_by('id'):
 
-        hours = math.floor(lesson.duration / 3600)
-        minutes = math.floor((lesson.duration - hours) / 60)
+        hours = math.floor(lesson.duration.seconds / 3600)
+        minutes = math.floor((lesson.duration.seconds - hours*3600) / 60)
 
         if lesson.topic:
             topic = lesson.topic
         else:
-            topic = '[untitled]' # this makes more sense than an empty string
+            topic = '[untitled]'  # this makes more sense than an empty string
 
         if not lesson.fixed:
             unscheduled += 1
