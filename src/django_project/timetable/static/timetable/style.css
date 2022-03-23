@@ -11,6 +11,15 @@
     width: 62px;
 }
 
+#username-input {
+    width: 267px;
+}
+
+#password-input {
+    width: 270px;
+}
+
+
 .subject-1 {
     background-color: #ffa861 !important;
 }

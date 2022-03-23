@@ -9,17 +9,17 @@ from .models import Group, User
 
 class LoginForm(AuthenticationForm):
     username = UsernameField(widget=forms.TextInput(
-        attrs={'class': 'w-100 mb-3',
-               'placeholder': 'Username',
-               'id': 'username'}),
-        label='')
+        attrs={'class': 'mb-3',
+               'placeholder': '',
+               'id': 'username-input'}),
+        label='Username')
     password = forms.CharField(widget=forms.PasswordInput(
         attrs={
-            'class': 'w-100 mb-2',
-            'placeholder': 'Password',
-            'id': 'password',
+            'class': 'mb-2',
+            'placeholder': '',
+            'id': 'password-input',
         }),
-        label='')
+        label='Password')
 
 
 class ScheduleForm(forms.Form):
