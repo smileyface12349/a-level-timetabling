@@ -176,7 +176,7 @@ class Timetable:
         # for each (randomly ordered) teacher...
         for teacher in User.objects.filter(user_type__exact='teacher').order_by('?'):
             # for each (randomly ordered) lesson that involves this teacher
-            for lesson in Lesson.objects.filter(group_id__link__user_id__id__exact=teacher.id).order_by('?').order_by('added'):
+            for lesson in Lesson.objects.filter(user_id__id__exact=teacher.id).order_by('?').order_by('added'):
                 # try to schedule at random time
                 # if no time available to schedule, break
                 pass
@@ -189,7 +189,8 @@ class Timetable:
 
     def mutate(self):
         """Mutates the given solution (for use in a genetic algorithm)"""
-        return self
+        return
 
     def add(self):
-        """Adds all lessons contained within this timetable into the database"""
+        """Adds all lessons contained within this ble into the database"""
+
