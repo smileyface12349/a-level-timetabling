@@ -1,5 +1,8 @@
+import datetime
 import random
 from typing import List, Sequence
+
+from src.django_project.timetable.models import Lesson, User
 
 
 def should_stop(current_population, previous_population, iterations):
@@ -142,16 +145,51 @@ class Population:
 
 class Timetable:
     """Represents a potential timetable for a given period of time"""
-    def __init__(self, stuff=None):
-        pass
+
+    def __init__(self, days: int = 1, time_per_day: int = 114, seconds_per_unit_time: float = 300, day_start=datetime.time(8, 30, 0), unscheduled_lessons=None):
+        self.days = days
+        self.time_per_day = time_per_day
+        self.seconds_per_unit_time = seconds_per_unit_time
+        self.day_start = day_start
+
+        if unscheduled_lessons:
+            self.unscheduled_lessons = unscheduled_lessons
+        else:
+            self.unscheduled_lessons = []
+            per_class = {}
+            for unscheduled_lesson in Lesson.objects.filter(fixed=False).exclude(start__lte=datetime.datetime.now()):
+                if unscheduled_lesson.group in per_class:
+                    per_class[unscheduled_lesson.group] += 1
+                else:
+                    per_class[unscheduled_lesson.group] = 1
+
+                if per_class[unscheduled_lesson.group] <= days:  # this helps to reduce the possibilities to consider
+                    self.unscheduled_lessons.append(unscheduled_lesson)
+
+        self.lessons = []
 
     def random(self):
-        """Generates a completely random solution"""
+        """Generates a completely random solution
+        All solutions should be equally likely, EXCEPT those involving clashes
+        This algorithm makes some attempt to minimise clashes while being quick to execute"""
+
+        # for each (randomly ordered) teacher...
+        for teacher in User.objects.filter(user_type__exact='teacher').order_by('?'):
+            # for each (randomly ordered) lesson that involves this teacher
+            for lesson in Lesson.objects.filter(group_id__link__user_id__id__exact=teacher.id).order_by('?').order_by('added'):
+                # try to schedule at random time
+                # if no time available to schedule, break
+                pass
+
         return self
 
     def cost(self):
         """Evaluates the cost function for the given solution"""
         return 1
+
+    def mutate(self):
+        """Mutates the given solution (for use in a genetic algorithm)"""
+        return self
 
     def add(self):
         """Adds all lessons contained within this timetable into the database"""
