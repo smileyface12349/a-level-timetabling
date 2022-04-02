@@ -3,7 +3,7 @@ import math
 import random
 from typing import List, Sequence, Optional, Tuple
 
-from src.django_project.timetable.models import Lesson, User
+from src.django_project.timetable.models import Lesson, User, Group
 
 
 def should_stop(current_population, previous_population, iterations):
@@ -24,7 +24,6 @@ class Population:
                  time_per_day: int = 114, seconds_per_unit_time: float = 300,
                  day_start=datetime.time(8, 30, 0)):
         """
-
         :param popsize: The population size
         :param stopping_condition: A function taking in:
          - the current population (of type Population)
@@ -71,6 +70,10 @@ class Population:
             self.iterate()
             self.generations += 1
 
+        best, best_cost = self.select_best_solution()
+
+        return best
+
     def iterate(self):
         """Performs one iteration of the genetic algorithm on the current population"""
 
@@ -78,6 +81,16 @@ class Population:
         offspring = self.generate_offspring(parents)
         candidates = parents + offspring
         self.population = self.choose_new_population(candidates)
+
+    def select_best_solution(self):
+        """Chooses the best solution, re-evaluating the cost function for all"""
+        self.population = self.evaluate_all_costs(self.population)
+        best = None, float('inf')
+        for timetable, cost in self.population:
+            if cost < best[1]:
+                best = timetable, cost
+
+        return best
 
     def choose_new_population(self, candidates):
         """Chooses the new population from the list of candidates
@@ -155,7 +168,9 @@ class Population:
             for x in range(len(potential_new_lessons)//2):
                 new_lessons.append(potential_new_lessons.pop(0))
 
-        timetable = Timetable(lessons=new_lessons, first_day=self.first_day, days=self.days, time_per_day=self.time_per_day, seconds_per_unit_time=self.seconds_per_unit_time, day_start=self.day_start)
+        timetable = Timetable(lessons=new_lessons, first_day=self.first_day, days=self.days,
+                              time_per_day=self.time_per_day, seconds_per_unit_time=self.seconds_per_unit_time,
+                              day_start=self.day_start)
         return timetable, float('inf')  # the cost function may not be needed, so it does not need to be executed here
 
     def mutate(self, offspring):
@@ -170,7 +185,9 @@ class Population:
 class Timetable:
     """Represents a potential timetable for a given period of time"""
 
-    def __init__(self, first_day: Optional[datetime.datetime] = None, days: int = 1, time_per_day: int = 114, seconds_per_unit_time: float = 300, day_start=datetime.time(8, 30, 0), unscheduled_lessons=None, group_data=None, lessons=None):
+    def __init__(self, first_day: Optional[datetime.datetime] = None, days: int = 1, time_per_day: int = 114,
+                 seconds_per_unit_time: float = 300, day_start=datetime.time(8, 30, 0), year_start=None,
+                 unscheduled_lessons=None, group_data=None, desired_allocations=None, lessons=None):
         if first_day:
             self.first_day = first_day
         else:
@@ -179,6 +196,13 @@ class Timetable:
         self.time_per_day = time_per_day
         self.seconds_per_unit_time = seconds_per_unit_time
         self.day_start = day_start
+        self.desired_allocations = desired_allocations
+
+        if year_start:
+            self.year_start = year_start
+        else:
+            first_lesson = Lesson.objects.order_by('start')[:1].get()
+            self.year_start = first_lesson.start
 
         if unscheduled_lessons:
             self.unscheduled_lessons = unscheduled_lessons
@@ -186,7 +210,7 @@ class Timetable:
         else:
             self.unscheduled_lessons = []
             per_class = {}
-            for unscheduled_lesson in Lesson.objects.filter(fixed=False).exclude(start__lte=datetime.datetime.now()):
+            for unscheduled_lesson in Lesson.objects.filter(fixed=False).exclude(start__lte=first_day):
                 if unscheduled_lesson.group in per_class:
                     per_class[unscheduled_lesson.group] += 1
                 else:
@@ -199,10 +223,15 @@ class Timetable:
         if group_data:
             self.group_data = group_data
         else:
-            # TODO: Calculate this data. Need (for each group):
-            #   - time allocated
-            #   - time since last lesson
             self.group_data = {}
+            for group in Group.objects.filter():
+                previous = None
+                time_allocated = 0
+                for lesson in Lesson.objects.filter(group_id__id__exact=group.id, start__lte=datetime.datetime.now()).order_by('start'):  # oldest first
+                    previous = lesson
+                    time_allocated += lesson.duration
+                days_since_previous = (datetime.datetime.now().replace(hour=0, minute=0, second=0) - previous.start.replace(hour=0, minute=0, second=0)).days
+                self.group_data[group.id] = [time_allocated, days_since_previous]
 
         if not lessons:
             self.lessons = {}  # format {day: lesson} of type {int: Lesson}
@@ -255,8 +284,8 @@ class Timetable:
 
         previous = None
         gaps = []
-        # TODO: Have to sort lessons on a given day by start time
         for day in days:
+            sorted(self.lessons[day])
             for lesson in self.lessons[day]:
                 if previous:
                     gaps.append((previous, lesson.start - previous))
@@ -288,6 +317,11 @@ class Timetable:
         POINTS_PER_STUDENT_CLASH = 10
         MAX_LOAD_CONSTANT = 23  # max load = c ln c, where c is this value
         EARLY_FINISH_CONSTANT = 10
+        EVEN_ALLOCATION_CONSTANT_A = 0.4
+        EVEN_ALLOCATION_CONSTANT_B = 8
+        WEIGHTING_OF_DIFF = 100
+        VARIETY_BASE = 2
+        VARIETY_COEFFICIENT = 1
 
         total_cost = 0
         for day in range(self.days):
@@ -313,14 +347,21 @@ class Timetable:
             clashes_cost = POINTS_PER_STUDENT_CLASH * student_clashes + POINTS_PER_TEACHER_CLASH * teacher_clashes
 
             # constraint 3: even allocation of lesson times
-            # TODO: Need to get information on past timetables here
-            #   could just get the time allocated to each lesson
+            def sigmoid(a):
+                return 1 / (1 + math.exp(-a))
+            weighting = sigmoid(EVEN_ALLOCATION_CONSTANT_A + EVEN_ALLOCATION_CONSTANT_B * (self.first_day - self.year_start).days)
+            diffs = 0
+            for group_id in self.group_data:
+                diff = abs(self.group_data[group_id][0] - self.desired_allocations[group_id]) / self.desired_allocations[group_id]
+                diffs += diff
+            even_allocation_cost = WEIGHTING_OF_DIFF * weighting * diffs
 
             # NOTE: constraint 4 is being computed with constraint 7
 
             # constraint 5: variety of subjects
-            # TODO: Also needs historical data
-            #   needs time since the last lesson for each class
+            variety_cost = 0
+            for group_id in self.group_data:
+                variety_cost += VARIETY_COEFFICIENT * (VARIETY_BASE ** self.group_data[group_id][1])
 
             # constraint 6: max daily workload
             daily_workload_cost = 0
@@ -346,13 +387,15 @@ class Timetable:
                 'teacher clashes': teacher_clashes,
                 'student clashes': student_clashes,
                 'clashes cost': clashes_cost,
-
+                'total diffs': diffs,
+                'even allocation cost': even_allocation_cost,
+                'variety cost': variety_cost,
                 'daily workload cost': daily_workload_cost,
                 'gaps cost': gaps_cost,
                 'early finish cost': early_finish_cost
             }
 
-            total_cost += clashes_cost + daily_workload_cost + gaps_cost + early_finish_cost
+            total_cost += clashes_cost + even_allocation_cost + variety_cost + daily_workload_cost + gaps_cost + early_finish_cost
 
         return total_cost
 
