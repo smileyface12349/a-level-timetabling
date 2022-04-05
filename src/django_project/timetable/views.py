@@ -7,9 +7,11 @@ from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
+from django.utils.timezone import make_aware, is_naive
 
 from .forms import ScheduleForm
 from .models import Lesson, Link, Subject, User, Group
+from .timetabling import schedule
 
 MIN_UNSCHEDULED_LESSONS = 3
 
@@ -25,6 +27,19 @@ def login_redirect(request):
             return redirect('/teacher/')
         else:
             return redirect('/admin/')
+
+
+def test(request):
+    desired_allocation = {0: 1, 1: 1}
+    output = schedule(timetable_init_kwargs={'desired_allocations': desired_allocation})
+    print(output.lessons)
+    return 200
+
+
+def convert_tz(request):
+    for lesson in Lesson.objects.filter():
+        if lesson.start and is_naive(lesson.start):
+            lesson.start = make_aware(lesson.start)
 
 
 @login_required
@@ -75,8 +90,8 @@ def timetable(request):
                 topic = topic[:42]+'...'
             lesson_data.append(topic)
         lesson_data.append('Room')  # Room allocation will be completed later
-        start = lesson.start
-        end = lesson.start + lesson.duration
+        start = lesson.relative_start
+        end = lesson.relative_start + lesson.duration
         lesson_data.append(start.strftime('%H:%M') + ' - ' + end.strftime('%H:%M'))
         lessons.append(lesson_data)
 
