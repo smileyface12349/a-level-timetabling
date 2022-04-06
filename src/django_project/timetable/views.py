@@ -5,13 +5,13 @@ import time
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.utils.timezone import make_aware, is_naive
 
 from .forms import ScheduleForm
 from .models import Lesson, Link, Subject, User, Group
-from .timetabling import schedule
+from .timetabling import schedule, Population
 
 MIN_UNSCHEDULED_LESSONS = 3
 
@@ -30,10 +30,21 @@ def login_redirect(request):
 
 
 def test(request):
-    desired_allocation = {0: 1, 1: 1}
-    output = schedule(timetable_init_kwargs={'desired_allocations': desired_allocation})
-    print(output.lessons)
-    return 200
+    desired_allocation = {1: 1, 2: 1}
+    population = Population(desired_allocations=desired_allocation, year_start=datetime.datetime.now(datetime.timezone.utc))
+    output = population.start()
+    print('BEGIN POPULATION')
+    for individual in population.population:
+        print(individual.lessons)
+    print('END POPULATION')
+    print('BEGIN BEST SOLUTION')
+    for day in output.lessons:
+        for lesson in output.lessons[day]:
+            print(f"{lesson.topic} - {lesson.relative_start}")
+    print(f"BEST SOLUTION COST: {output.cost}")
+    print(f"BREAKDOWN: {output.get_cost(debug=True)}")
+    print('END BEST SOLUTION')
+    return HttpResponse('Timetabling complete - printed to console')
 
 
 def convert_tz(request):

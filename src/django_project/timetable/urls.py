@@ -5,7 +5,7 @@ from .forms import LoginForm
 
 urlpatterns = [
     path('test/', views.test),
-    path('convert_tz/', views.convert_tz),
+    #path('convert_tz/', views.convert_tz),
 
     path('login/', django_views.LoginView.as_view(template_name='timetable/login.html', authentication_form=LoginForm), name='timetable-login'),
     path('logout/', django_views.LogoutView.as_view(template_name='timetable/logout.html'), name='timetable-logout'),
