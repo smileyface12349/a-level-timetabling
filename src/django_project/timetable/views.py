@@ -1,5 +1,6 @@
 import datetime
 import math
+import random
 import time
 
 from django.contrib.auth.decorators import login_required
@@ -31,7 +32,8 @@ def login_redirect(request):
 
 def test(request):
     desired_allocation = {1: 1, 2: 1}
-    population = Population(desired_allocations=desired_allocation, year_start=datetime.datetime.now(datetime.timezone.utc))
+    population = Population(desired_allocations=desired_allocation,
+                            year_start=datetime.datetime.now(datetime.timezone.utc))
     output = population.start()
     print('BEGIN POPULATION')
     for individual in population.population:
@@ -40,7 +42,10 @@ def test(request):
     print('BEGIN BEST SOLUTION')
     for day in output.lessons:
         for lesson in output.lessons[day]:
-            print(f"{lesson.topic} - {lesson.relative_start}")
+            try:
+                print(f"{lesson.teacher.username} - {lesson.relative_start}")
+            except:
+                print(f"{lesson.topic} - {lesson.relative_start}")
     print(f"BEST SOLUTION COST: {output.cost}")
     print(f"BREAKDOWN: {output.get_cost(debug=True)}")
     print('END BEST SOLUTION')
