@@ -5,4 +5,4 @@ My A-Level Computer Science Project - A dynamic timetabling system that adapts t
 
 THIS CODE IS PROVIDED WITHOUT A LICENSE OF ANY KIND.
 
-You are not allowed to use, modify or distribute this code without prior approval from me.
+You are not allowed to use, modify or distribute this code without prior approval.
