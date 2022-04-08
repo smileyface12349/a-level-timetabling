@@ -1,18 +1,13 @@
 import datetime
 import math
-import random
-import time
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
-from django.core.exceptions import ValidationError
-from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.utils.timezone import make_aware, is_naive
 
 from .forms import ScheduleForm
-from .models import Lesson, Link, Subject, User, Group
-from .timetabling import schedule, Population
+from .models import Lesson, Subject, User, Group
 
 MIN_UNSCHEDULED_LESSONS = 3
 
@@ -28,28 +23,6 @@ def login_redirect(request):
             return redirect('/teacher/')
         else:
             return redirect('/admin/')
-
-
-def test(request):
-    desired_allocation = {1: 1, 2: 1}
-    population = Population(desired_allocations=desired_allocation,
-                            year_start=datetime.datetime.now(datetime.timezone.utc))
-    output = population.start()
-    print('BEGIN POPULATION')
-    for individual in population.population:
-        print(individual.lessons)
-    print('END POPULATION')
-    print('BEGIN BEST SOLUTION')
-    for day in output.lessons:
-        for lesson in output.lessons[day]:
-            try:
-                print(f"{lesson.teacher.username} - {lesson.relative_start}")
-            except:
-                print(f"{lesson.topic} - {lesson.relative_start}")
-    print(f"BEST SOLUTION COST: {output.cost}")
-    print(f"BREAKDOWN: {output.get_cost(debug=True)}")
-    print('END BEST SOLUTION')
-    return HttpResponse('Timetabling complete - printed to console')
 
 
 def convert_tz(request):
@@ -90,7 +63,7 @@ def timetable(request):
 
     lessons = []
 
-    for lesson in Lesson.objects.filter(group_id__link__user_id__username__exact=user.username, start__gte=after, start__lte=before):
+    for lesson in Lesson.objects.filter(group_id__link__user_id__username__exact=user.username, start__gte=after, start__lte=before).order_by('start'):
         lesson_data = []
         if user.user_type == 'student':
             lesson_data.append(Subject.objects.filter(link__group_id__lesson__id__exact=lesson.id)[:1].get().name)
@@ -106,8 +79,8 @@ def timetable(request):
                 topic = topic[:42]+'...'
             lesson_data.append(topic)
         lesson_data.append('Room')  # Room allocation will be completed later
-        start = lesson.relative_start
-        end = lesson.relative_start + lesson.duration
+        start = lesson.start
+        end = lesson.start + lesson.duration
         lesson_data.append(start.strftime('%H:%M') + ' - ' + end.strftime('%H:%M'))
         lessons.append(lesson_data)
 

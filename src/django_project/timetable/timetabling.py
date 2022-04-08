@@ -1,28 +1,52 @@
+import copy
 import datetime
 import math
 import random
-import time
-from typing import List, Sequence, Optional, Tuple
+from typing import List, Optional, Tuple
 
-from django.utils.timezone import is_naive
+from celery import Celery
+from celery.schedules import crontab
 
 from .models import Lesson, User, Group
 
-import traceback
-import warnings
-import sys
+app = Celery()
 
 
-# def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
-#     traceback.print_stack()
-#     log = file if hasattr(file, 'write') else sys.stderr
-#     log.write(warnings.formatwarning(message, category, filename, lineno, line))
-#
-# warnings.showwarning = warn_with_traceback
+@app.task(run_every=crontab(hour=20, minute=0))
+def schedule_lessons(iterations=10, look_ahead_period=14):
+    """Creates a timetable using the unscheduled lessons from the database"""
+    base_day = datetime.datetime.now(datetime.timezone.utc).replace(minute=0, hour=0, second=0)
+    for x in range(look_ahead_period):
+        day = base_day + datetime.timedelta(days=x)
+        end_of_day = day.replace(hour=23, minute=59, second=59)
+        if day.weekday() <= 4:  # a weekday
+            if not Lesson.objects.filter(start__gte=day, start__lte=end_of_day):
+                print('-----------')
+                print(f"SCHEDULING {day}")
+                best_result: Optional[Timetable] = None
+                for x in range(iterations):
+                    print(f"Iteration: {x+1}")
+                    population = Population(year_start=base_day, first_day=base_day + datetime.timedelta(days=x))
+                    output: Timetable = population.start()
+                    if best_result is None or output.get_cost() < best_result.get_cost():
+                        best_result = output
+
+                print(f"Adding best result (cost: {best_result.get_cost()})")
+                best_result.add()
+
+                for lesson in best_result.lessons[0]:
+                    # group = Group.objects.filter(group_id__exact=lesson.group_id)[:1].get()
+                    new_lesson = Lesson()
+                    new_lesson.group_id = lesson.group_id
+                    duration = random.randint(6, 24)
+                    new_lesson.duration = datetime.timedelta(seconds=duration * 300)
+                    new_lesson.topic = f"Automatically generated while timetabling"
+                    new_lesson.fixed = False
+                    new_lesson.save()
 
 
 def should_stop(current_population, iterations):
-    if iterations >= 30:
+    if iterations >= 100:
         return True
     else:
         return False
@@ -87,13 +111,13 @@ class Population:
     """Represents a population of timetables for use in the genetic algorithm"""
 
     def __init__(self, timetable_init_kwargs=None, desired_allocations=None,
-                 popsize=100, num_parents=50, num_offspring=50,
-                 mutation_amount=1, mutation_chance=0.7, guaranteed_parent_survival=2,
+                 popsize=200, num_parents=50, num_offspring=100,
+                 mutation_amount=3, mutation_chance=0.7, guaranteed_parent_survival=5,
                  stopping_condition=should_stop, random_lesson_skip_probability: float = 0.2,
                  first_day: Optional[datetime.datetime] = None, days: int = 1,
                  time_per_day: int = 114, seconds_per_unit_time: float = 300,
                  desired_lessons: int = 44,
-                 day_start=datetime.time(8, 30, 0), year_start=None):
+                 day_start=datetime.timedelta(hours=8, minutes=30), year_start=None):
         """
         :param popsize: The population size
         :param stopping_condition: A function taking in:
@@ -131,7 +155,6 @@ class Population:
         self.random_lesson_skip_probability = random_lesson_skip_probability
 
         self.unscheduled_lessons = get_unscheduled_lessons(self.first_day, self.days, self.seconds_per_unit_time)
-        print(f"UNSCHEDULED LESSONS: {len(self.unscheduled_lessons)}")
         self.group_data = get_group_data()
         self.all_students = []
         for group_id in self.group_data:
@@ -169,33 +192,28 @@ class Population:
         """Iterate over the solution until self.stopping_condition returns True
          self.stopping_condition should have a fallback condition on the number of iterations to prevent an infinite loop"""
 
-        print(f"Timetabling...")
+        # print(f"Timetabling...")
         self.population = self.evaluate_all_costs(self.population)
         while not self.stopping_condition(self, self.generations):
-            print(f"Iteration: {self.generations}")
+            # print(f"Iteration: {self.generations}")
             self.iterate()
             self.generations += 1
 
-        print('Selecting best solution')
+        # print('Selecting best solution')
         best = self.select_best_solution()
 
-        print("Timetabling complete!")
+        # print("Timetabling complete!")
 
         return best
 
     def iterate(self):
         """Performs one iteration of the genetic algorithm on the current population"""
 
-        # self.population = self.evaluate_all_costs(self.population)
         parents = self.choose_parents()
         offspring = self.generate_offspring(list(parents))
-        # offspring = self.evaluate_all_costs(offspring)
-        candidates = list(parents + offspring)
+        candidates = list(self.population + offspring)
         self.population = self.choose_new_population(candidates)
-        print(f"First solution has stored cost {self.population[0].get_cost()}")
-        print(f"First solution has actual cost {self.population[0].get_cost(force=True)}")
-        print(f"Current best solution has stored cost {self.select_best_solution(evaluate_costs=False).get_cost()}")
-        print(f"Current best solution has actual cost {self.select_best_solution(evaluate_costs=False).get_cost(force=True)}")
+        # print(f"Best Cost: {self.select_best_solution(evaluate_costs=False).get_cost():.2f}")
 
     def select_best_solution(self, evaluate_costs=True):
         """Chooses the best solution, re-evaluating the cost function for all"""
@@ -219,7 +237,11 @@ class Population:
 
         # carry forward the best solutions from the previous iteration
         for x in range(self.guaranteed_surviving_parents):
-            new_population.append(candidates.pop(0))
+            best_individual = min(candidates, key=lambda t: t.get_cost())
+            new_population.append(best_individual)
+            candidates.remove(best_individual)
+
+        # print(f"{len(candidates)} to choose from")
 
         if len(candidates)+self.guaranteed_surviving_parents <= self.popsize:
             return new_population + candidates
@@ -237,7 +259,7 @@ class Population:
             if p < random.uniform(0, 1):
                 new_population.append(candidates.pop(i))
 
-        print([p.get_cost() for p in new_population])
+        # print([p.get_cost() for p in new_population])
 
         return new_population
 
@@ -292,9 +314,9 @@ class Population:
 
             for x in range(len(potential_new_lessons) // 2):
                 if potential_new_lessons:
-                    lesson = potential_new_lessons.pop(0)
+                    lesson: PotentiallyScheduledLesson = potential_new_lessons.pop(0)
                     if lesson.id not in added_ids:
-                        new_lessons[day].append(lesson)
+                        new_lessons[day].append(lesson.copy())
                         added_ids.append(lesson.id)
 
         timetable = Timetable(lessons=new_lessons, first_day=self.first_day, days=self.days,
@@ -321,7 +343,7 @@ class Timetable:
     """Represents a potential timetable for a given period of time"""
 
     def __init__(self, first_day: Optional[datetime.datetime] = None, days: int = 1, time_per_day: int = 114,
-                 seconds_per_unit_time: float = 300, day_start=datetime.time(8, 30, 0), year_start=None,
+                 seconds_per_unit_time: float = 300, day_start=datetime.timedelta(hours=8, minutes=30), year_start=None,
                  unscheduled_lessons=None, group_data=None, desired_allocations=None, lessons=None,
                  desired_lesson_time=44, random_lesson_skip_probability: float = 0.2, all_students=None):
         if first_day:
@@ -347,7 +369,9 @@ class Timetable:
             self.year_start = get_year_start()
 
         if unscheduled_lessons:
-            self.unscheduled_lessons = list(unscheduled_lessons)
+            self.unscheduled_lessons = []
+            for lesson in unscheduled_lessons:
+                self.unscheduled_lessons.append(lesson.copy())
         else:
             self.unscheduled_lessons = get_unscheduled_lessons(self.first_day, self.days, self.seconds_per_unit_time)
         random.shuffle(self.unscheduled_lessons)
@@ -372,40 +396,47 @@ class Timetable:
         else:
             return self == other
 
-    def random(self, threshold=100):
+    def random(self, threshold=10, true_random_min=None, true_random_max=None):
         """Generates a random solution
         This algorithm makes some attempt to minimise teacher clashes while being quick to execute"""
 
-        counter = 0
-        for lesson in self.unscheduled_lessons:
-            lesson: PotentiallyScheduledLesson
-            teacher = self.get_teacher(lesson)
-            day = random.randint(0, self.days - 1)
-            gaps = self.get_gaps(user_id=teacher.id, days=[day], random_order=True, boundaries=True)
+        if true_random_min and true_random_max:
+            for x in range(random.randint(true_random_min, true_random_max)):
+                lesson = random.choice(self.unscheduled_lessons)
+                lesson = PotentiallyScheduledLesson(lesson)
+                latest_end = self.time_per_day - lesson.relative_duration
+                lesson.relative_start = random.randint(0, latest_end)
+                self.lessons[0].append(lesson)
 
-            for gap_start, gap in gaps:  # for each (random) gap...
-                if random.uniform(0, 1) < self.random_lesson_skip_probability:
-                    continue
-                if gap > lesson.relative_duration + 1:  # if there's enough space for a lesson (need at least 1 unit either side)...
-                    if gap < lesson.relative_duration * 1.5:  # if there's not much space...
-                        lesson.relative_start = gap_start + 1  # schedule for start of gap (plus 1 unit break)
-                        # TODO: Randomly choose between start and end
+        else:
+            counter = 0
+            for lesson in self.unscheduled_lessons:
+                lesson: PotentiallyScheduledLesson
+                teacher = self.get_teacher(lesson)
+                day = random.randint(0, self.days - 1)
+                gaps = self.get_gaps(user_id=teacher.id, days=[day], random_order=True, boundaries=True)
+
+                for gap_start, gap in gaps:  # for each (random) gap...
+                    if random.uniform(0, 1) < self.random_lesson_skip_probability:
+                        continue
+                    if gap > lesson.relative_duration + 1:  # if there's enough space for a lesson (need at least 1 unit either side)...
+                        if gap < lesson.relative_duration * 1.5:  # if there's not much space...
+                            lesson.relative_start = gap_start + 1  # schedule for start of gap (plus 1 unit break)
+                            # TODO: Randomly choose between start and end
+                        else:
+                            latest_end = gap_start + gap - 2
+                            lesson.relative_start = random.randint(gap_start,
+                                                                   latest_end - lesson.relative_duration)  # allocate to random position
+                        self.lessons[day].append(lesson)
+                        break
                     else:
-                        latest_end = gap_start + gap - 2
-                        lesson.relative_start = random.randint(gap_start,
-                                                               latest_end - lesson.relative_duration)  # allocate to random position
-                    self.lessons[day].append(lesson)
-                    break
-                else:
-                    continue
-            else:  # this triggers if the end of the loop is reached without a break statement
-                counter += 1
-                if counter > threshold:
-                    break
+                        continue
+                else:  # this triggers if the end of the loop is reached without a break statement
+                    counter += 1
+                    if counter > threshold:
+                        break
 
         self.modified = True
-
-        # print(self.lessons)
 
         return self
 
@@ -478,7 +509,7 @@ class Timetable:
         DESIRED_LESSONS_BASE = 1.2
         DESIRED_LESSONS_MULTIPLIER = 25
 
-        if not self.modified and not force:
+        if not self.modified and not force and not debug:
             return self.cost
 
         total_cost = 0
@@ -588,6 +619,7 @@ class Timetable:
             # print(debug_info)
 
         self.cost = total_cost
+        self.modified = False
 
         if debug:
             return debug_info
@@ -633,7 +665,16 @@ class Timetable:
 
     def add(self):
         """Update the database to include the start times for all lessons currently stored within this object"""
-        # TODO
+        for day in self.lessons:
+            for lesson in self.lessons[day]:
+                new_lesson = Lesson()
+                new_lesson.group_id = lesson.group_id
+                new_lesson.duration = lesson.duration  # relative_duration not required because duration is never modified
+                new_lesson.topic = lesson.topic
+                new_lesson.fixed = True
+                start_time = self.first_day + datetime.timedelta(days=day) + self.day_start + datetime.timedelta(seconds=lesson.relative_start * self.seconds_per_unit_time)
+                new_lesson.start = start_time
+                new_lesson.save()
 
 
 class PotentiallyScheduledLesson:
@@ -644,7 +685,7 @@ class PotentiallyScheduledLesson:
         'id',
         'duration',
         'group_id',
-        'topic'  # for debug only
+        'topic'
     ]
 
     def __init__(self, lesson, seconds_per_time_unit: float = 300):
@@ -665,6 +706,9 @@ class PotentiallyScheduledLesson:
             return f"<Lesson teacher='{self.teacher.username}' start={self.relative_start}>"
         else:
             return f"<Lesson start={self.relative_start}>"
+
+    def copy(self):
+        return copy.copy(self)
 
     def __repr__(self):
         return self.__str__()
