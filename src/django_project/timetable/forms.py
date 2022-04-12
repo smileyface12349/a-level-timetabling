@@ -43,12 +43,10 @@ class ScheduleForm(forms.Form):
                'placeholder': 'What will the lesson be about? (optional)',
                'id': 'topic-input'}),
         label='', max_length=128, required=False)
-    buttons_html = """
-        <button type="button" onclick="document.getElementById('duration-input-number').value=40;" class="btn-secondary btn px-1 py-0">40</button>
-        <button type="button" onclick="document.getElementById('duration-input-number').value=80;" class="btn-secondary btn px-1 py-0">80</button>
-        <button type="button" onclick="document.getElementById('duration-input-number').value=100;" class="btn-secondary btn px-1 py-0">100</button>
-        <button type="button" onclick="document.getElementById('duration-input-number').value=120;" class="btn-secondary btn px-1 py-0">120</button>
-    """
+    buttons_html = ''
+    durations = ['40', '80', '100', '120']
+    for duration in durations:
+        buttons_html += f'<button type="button" onclick="document.getElementById(\'duration-input-number\').value={duration};" class="btn-secondary btn px-1 py-0">{duration}</button>'
     duration = forms.DurationField(widget=forms.NumberInput(
         attrs={
             'class': 'mb-2',

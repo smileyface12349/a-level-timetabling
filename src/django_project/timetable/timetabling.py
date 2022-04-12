@@ -179,7 +179,7 @@ class Population:
                 self.desired_allocations[group_id] = 1
                 print(f"Warning: Group {group_id} had no desired allocation. Set to 1")
 
-        self.population: list[Timetable] = []
+        self.population: List[Timetable] = []
         for x in range(self.popsize):
             self.population.append(Timetable(first_day=self.first_day, days=self.days, time_per_day=self.time_per_day,
                                              seconds_per_unit_time=self.seconds_per_unit_time, day_start=self.day_start,

@@ -4,7 +4,6 @@ import math
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import render, redirect
-from django.utils.timezone import make_aware, is_naive
 
 from .forms import ScheduleForm
 from .models import Lesson, Subject, User, Group
@@ -23,12 +22,6 @@ def login_redirect(request):
             return redirect('/teacher/')
         else:
             return redirect('/admin/')
-
-
-def convert_tz(request):
-    for lesson in Lesson.objects.filter():
-        if lesson.start and is_naive(lesson.start):
-            lesson.start = make_aware(lesson.start)
 
 
 @login_required

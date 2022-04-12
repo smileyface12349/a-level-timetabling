@@ -6,8 +6,6 @@ from django.utils.translation import gettext, gettext_lazy as _
 
 from .models import User, Lesson, Group, Link, Subject
 
-# Register your models here.
-
 
 TITLE_CHOICES = [('', "It doesn't matter"),
                  ('mr', 'Mr'),
