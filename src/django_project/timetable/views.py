@@ -41,9 +41,13 @@ def timetable(request):
     weekstart = current_date - datetime.timedelta(days=weekday)
     after = current_date.replace(hour=0, minute=0, second=0)
     before = current_date.replace(hour=23, minute=59, second=59)
+    weeks_diff = math.floor((current_date - datetime.datetime.utcnow()).days / 7)
 
     weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-    weekdays_links = {'<': math.floor((weekstart - datetime.timedelta(days=3)).timestamp())}
+    if weeks_diff <= -2:
+        weekdays_links = {'<': 'disabled'}
+    else:
+        weekdays_links = {'<': math.floor((weekstart - datetime.timedelta(days=3)).timestamp())}
     for i in range(5):
         d = weekstart + datetime.timedelta(days=i)
         if i == weekday:
@@ -52,7 +56,10 @@ def timetable(request):
         else:
             key = weekdays[i]
         weekdays_links[key] = math.floor(d.timestamp())
-    weekdays_links['>'] = math.floor((weekstart + datetime.timedelta(days=7)).timestamp())
+    if weeks_diff >= 2:
+        weekdays_links['>'] = 'disabled'
+    else:
+        weekdays_links['>'] = math.floor((weekstart + datetime.timedelta(days=7)).timestamp())
 
     lessons = []
 

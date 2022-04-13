@@ -1,6 +1,8 @@
 {% extends "timetable/base.html" %}
 {% block content %}
     <h1 class="m-4">Scheduled Lessons</h1>
+    <a href="/teacher/schedule"><button class="btn btn-info ml-4 mt-2">New Lesson</button></a>
+    <a href="/" class="text-danger">Back to home</a>
     {% for lesson in lessons %}
     <div class="card my-2 mx-4 {% if lesson.fixed %}scheduled{% else %}bg-light{% endif %}">
         <div class="card-body">
@@ -15,6 +17,5 @@
         <p class="mx-2">You must always have some lessons scheduled in advance. If not enough are scheduled, 55-minute lessons will be automatically scheduled.</p>
     </div>
     {% endif %}
-    <a href="/teacher/schedule"><button class="btn btn-info ml-4 mt-2">New Lesson</button></a>
-    <a href="/" class="text-danger">Back to home</a>
+
 {% endblock %}

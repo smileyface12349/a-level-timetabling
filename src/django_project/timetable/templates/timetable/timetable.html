@@ -3,7 +3,11 @@
     <ul class="nav nav-tabs nav-fill">
         {% for day, link in weekdays_links.items %}
         <li class="nav-item">
+            {% if link == 'disabled' %}
+            <a href="#" class="nav-link disabled px-0">{{day}}</a>
+            {% else %}
             <a href="?day={{link}}" class="nav-link px-0{% if weekday_format == day %} active{%endif%}">{{day}}</a>
+            {% endif %}
         </li>
         {% endfor %}
     </ul>
