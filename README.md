@@ -1,5 +1,7 @@
 # a-level-timetabling
-My A-Level Computer Science Project - A dynamic timetabling system that adapts to how much time teachers actually need for their lessons
+My A-Level Computer Science Project - A dynamic timetabling system that adapts to how much time teachers actually need for their lessons.
+
+This project required me to produce a write-up. This is available [on my website](https://smileyface12349.xyz/files/timetabling.pdf)
 
 ## License
 
