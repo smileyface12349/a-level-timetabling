@@ -5,6 +5,4 @@ This project required me to produce a write-up. This is available [on my website
 
 ## License
 
-This code is provided without a license. You are not allowed to use, modify or distribute this code without prior approval.
-
-If you would like to use any of this code or take this project further, please get in touch.
+This code is now provided under the MIT license! Do what you want with it. If you end up using any of this code or taking this project further, I'd love to hear about it (but you have no legal obligation to do so).
